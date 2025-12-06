@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>龙珠收集系统 - 抽奖版</title>
+    <style>
+        /* ========== 龙珠系统原有CSS ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c2461 0%, #1e3799 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        /* 7颗龙珠进度条 */
+        .seven-dragon-balls {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .seven-dragon-balls h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-align: center;
+        }
+        
+        .balls-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .ball-progress {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .ball-progress.collected {
+            background: radial-gradient(circle at 30% 30%, #ffd700, #ff9a00);
+            border-color: #ffd700;
+            box-shadow: 0 0 15px #ffd700;
+        }
+        
+        /* 主容器 */
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 3px solid rgba(255, 215, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        h1 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 24px;
+            text-align: center;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* 进度条 */
+        .progress-container {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .progress-text {
+            font-size: 18px;
+            margin-bottom: 8px;
+            text-align: center;
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9a00, #ffd700);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shine 2s infinite;
+        }
+        
+        /* 6个怪兽区域 */
+        .monsters-container {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .monster {
+            width: 70px;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 8px;
+        }
+        
+        .monster:active {
+            transform: scale(0.95);
+        }
+        
+        .monster.ready {
+            background: rgba(255, 154, 0, 0.2);
+            border-color: rgba(255, 154, 0, 0.8);
+            animation: pulse 2s infinite;
+        }
+        
+        .monster.complete {
+            background: radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.8), rgba(255, 154, 0, 0.8));
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+        
+        .monster-icon {
+            font-size: 28px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .monster-name {
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 3px 8px;
+            border-radius: 10px;
+            color: white;
+        }
+        
+        /* 龙珠圆形容器 */
+        .dragon-ball-container {
+            width: 220px;
+            height: 220px;
+            position: relative;
+            margin: 15px 0;
+        }
+        
+        .dragon-ball {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+            border: 5px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* 龙珠的6个扇形部分 */
+        .dragon-sector {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            left: 0;
+            top: 0;
+            overflow: hidden;
+        }
+        
+        .dragon-sector-inner {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.05);
+            border-right: 3px solid rgba(255, 255, 255, 0.6);
+            transform-origin: top left;
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+            transition: all 0.5s;
+        }
+        
+        /* 最后一个扇形不需要右边框 */
+        .dragon-sector:nth-child(6) .dragon-sector-inner {
+            border-right: none;
+        }
+        
+        /* 点亮状态 */
+        .dragon-sector.complete .dragon-sector-inner {
+            background: radial-gradient(circle at 30% 30%, rgba(255, 215, 0, 0.8), rgba(255, 154, 0, 0.8));
+            border-right-color: rgba(255, 215, 0, 0.8);
+        }
+        
+        /* 设置6个扇形的位置 - 等分60度 */
+        .dragon-sector:nth-child(1) { 
+            transform: rotate(0deg); 
+        }
+        .dragon-sector:nth-child(2) { 
+            transform: rotate(60deg); 
+        }
+        .dragon-sector:nth-child(3) { 
+            transform: rotate(120deg); 
+        }
+        .dragon-sector:nth-child(4) { 
+            transform: rotate(180deg); 
+        }
+        .dragon-sector:nth-child(5) { 
+            transform: rotate(240deg); 
+        }
+        .dragon-sector:nth-child(6) { 
+            transform: rotate(300deg); 
+        }
+        
+        /* 龙珠中心区域 */
+        .dragon-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s;
+        }
+        
+        .dragon-center.complete {
+            background: radial-gradient(circle at 30% 30%, #ffd700, #ff9a00);
+            box-shadow: 0 0 30px #ffd700;
+        }
+        
+        .center-star {
+            font-size: 30px;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.5s;
+            color: white;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .center-star.show {
+            opacity: 1;
+            transform: scale(1);
+            animation: star-pulse 2s infinite;
+        }
+        
+        /* 龙珠全部完成时隐藏分界线 */
+        .dragon-ball.complete .dragon-sector .dragon-sector-inner {
+            border-right-color: transparent !important;
+        }
+        
+        /* 状态文本 */
+        .status-text {
+            font-size: 18px;
+            color: white;
+            margin: 15px 0;
+            min-height: 30px;
+            text-align: center;
+            font-weight: bold;
+            padding: 0 10px;
+        }
+        
+        /* 按钮区域 */
+        .buttons {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            margin-top: 10px;
+            gap: 15px;
+        }
+        
+        .action-button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .points-button {
+            background: linear-gradient(90deg, #ff9a00, #ffd700);
+            color: #333;
+            box-shadow: 0 4px 10px rgba(255, 154, 0, 0.3);
+        }
+        
+        .reset-button {
+            background: linear-gradient(90deg, #ff4757, #ff3838);
+            color: white;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.3);
+        }
+        
+        .action-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 新的一天按钮 */
+        .new-day-button {
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .new-day-button:active {
+            transform: translateY(2px);
+        }
+        
+        /* 调试按钮 */
+        .debug-button {
+            background: linear-gradient(90deg, #9b59b6, #8e44ad);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .debug-button:active {
+            transform: translateY(2px);
+        }
+        
+        .debug-section {
+            text-align: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.3);
+            width: 100%;
+        }
+        
+        /* 使用说明 */
+        .instructions {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            width: 100%;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
+        /* ========== 抽奖系统CSS ========== */
+        /* 抽奖系统容器 */
+        .choujiang-container {
+            display: none;
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            margin: 20px 0;
+            animation: popIn 0.5s;
+        }
+        
+        .choujiang-header {
+            background: linear-gradient(45deg, #FF416C, #FF4B2B);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .choujiang-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .choujiang-header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .choujiang-content {
+            padding: 20px;
+        }
+        
+        .choujiang-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f1f8e9;
+            border-radius: 10px;
+        }
+        
+        .choujiang-stat-item {
+            text-align: center;
+        }
+        
+        .choujiang-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .choujiang-stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .choujiang-progress-section {
+            margin-bottom: 25px;
+        }
+        
+        .choujiang-progress-title {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .choujiang-progress-bar {
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .choujiang-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+        
+        .choujiang-progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* 修改：去掉碎片显示，因为现在通过龙珠获得现金 */
+        .choujiang-guarantee-info {
+            background: #E3F2FD;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        
+        .choujiang-guarantee-item {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .choujiang-btn {
+            background: linear-gradient(45deg, #FF416C, #FF4B2B);
+            color: white;
+            border: none;
+            padding: 25px 50px;
+            font-size: 24px;
+            border-radius: 50px;
+            margin: 20px 0;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(255,75,43,0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .choujiang-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 10px rgba(255,75,43,0.6);
+        }
+        
+        .choujiang-result {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 3px dashed #4CAF50;
+            text-align: center;
+        }
+        
+        .choujiang-rolling {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 3px solid #FF9800;
+            min-height: 200px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .choujiang-reward-image {
+            font-size: 80px;
+            margin: 20px 0;
+            transition: transform 0.3s;
+        }
+        
+        .choujiang-rolling .choujiang-reward-image {
+            animation: bounce 0.5s infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-20px); }
+        }
+        
+        .choujiang-reward-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e91e63;
+            margin: 10px 0;
+        }
+        
+        .choujiang-reward-desc {
+            font-size: 18px;
+            color: #666;
+            margin: 10px 0;
+        }
+        
+        .choujiang-firework {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+        }
+        
+        @keyframes choujiang-firework {
+            0% { transform: translate(var(--x), var(--y)); width: 10px; opacity: 1; }
+            50% { width: 5px; opacity: 1; }
+            100% { width: 150px; opacity: 0; }
+        }
+        
+        .choujiang-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .choujiang-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            animation: popIn 0.5s;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .choujiang-result-emoji {
+            font-size: 80px;
+            margin: 20px 0;
+        }
+        
+        .choujiang-result-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e91e63;
+            margin-bottom: 10px;
+        }
+        
+        .choujiang-result-desc {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .choujiang-button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .choujiang-btn-primary {
+            background: #2196F3;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        /* 返回按钮 */
+        .back-to-dragon-btn {
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            margin: 20px 0;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(106, 17, 203, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .back-to-dragon-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .choujiang-reset-btn {
+            background: #f44336;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .choujiang-reset-section {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .choujiang-reset-note {
+            font-size: 10px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        /* ========== 模态框样式 ========== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 3px solid #ffd700;
+            color: white;
+        }
+        
+        .modal-header {
+            font-size: 22px;
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .points-display {
+            font-size: 42px;
+            color: #ff9a00;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            text-shadow: 0 2px 10px rgba(255, 154, 0, 0.3);
+        }
+        
+        .points-label {
+            font-size: 18px;
+            color: #ccc;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .deduct-section {
+            margin: 25px 0;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 250, 240, 0.1);
+            border-radius: 15px;
+        }
+        
+        .deduct-input {
+            width: 120px;
+            padding: 10px;
+            border: 2px solid #ffd700;
+            border-radius: 15px;
+            font-size: 18px;
+            text-align: center;
+            margin: 10px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .deduct-button {
+            background: linear-gradient(90deg, #ff4757, #ff3838);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.3);
+        }
+        
+        .modal-footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .close-button {
+            background: #636e72;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 动画效果 */
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(255, 154, 0, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 154, 0, 0.6); }
+        }
+        
+        @keyframes star-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.2); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .celebrate {
+            animation: celebrate 1s;
+        }
+        
+        /* 响应式调整 */
+        @media (max-height: 700px) {
+            .dragon-ball-container {
+                width: 180px;
+                height: 180px;
+                margin: 10px 0;
+            }
+            
+            .dragon-center {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .center-star {
+                font-size: 24px;
+            }
+            
+            .monster {
+                width: 60px;
+                height: 80px;
+            }
+            
+            .monster-icon {
+                font-size: 22px;
+            }
+            
+            .monster-name {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+        }
+        
+        @media (max-width: 350px) {
+            .dragon-ball-container {
+                width: 160px;
+                height: 160px;
+            }
+            
+            .dragon-center {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .center-star {
+                font-size: 20px;
+            }
+            
+            .monster {
+                width: 55px;
+                height: 75px;
+            }
+            
+            .monster-icon {
+                font-size: 20px;
+            }
+            
+            .monster-name {
+                font-size: 9px;
+                padding: 2px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 龙珠系统主界面 -->
+    <div id="dragonSystem" class="container">
+        <!-- 7颗龙珠进度 -->
+        <div class="seven-dragon-balls" id="sevenBalls">
+            <h3>集齐7颗龙珠召唤神龙！</h3>
+            <div class="balls-container">
+                <div class="ball-progress" id="ball1">1</div>
+                <div class="ball-progress" id="ball2">2</div>
+                <div class="ball-progress" id="ball3">3</div>
+                <div class="ball-progress" id="ball4">4</div>
+                <div class="ball-progress" id="ball5">5</div>
+                <div class="ball-progress" id="ball6">6</div>
+                <div class="ball-progress" id="ball7">7</div>
+            </div>
+        </div>
+        
+        <h1>🐉 龙珠碎片收集站 🐉</h1>
+        
+        <!-- 进度条 -->
+        <div class="progress-container">
+            <div class="progress-text">今日碎片: <span id="progressCount">0</span>/6</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+        
+        <!-- 状态文本 -->
+        <div class="status-text" id="statusText">点击怪兽开始收集碎片！</div>
+        
+        <!-- 6个怪兽区域 -->
+        <div class="monsters-container">
+            <div class="monster" id="monster1" data-task="1">
+                <span class="monster-icon">😴</span>
+                <div class="monster-name">瞌睡虫怪</div>
+            </div>
+            <div class="monster" id="monster2" data-task="2">
+                <span class="monster-icon">🤯</span>
+                <div class="monster-name">分心怪</div>
+            </div>
+            <div class="monster" id="monster3" data-task="3">
+                <span class="monster-icon">✍️</span>
+                <div class="monster-name">潦草怪</div>
+            </div>
+            <div class="monster" id="monster4" data-task="4">
+                <span class="monster-icon">😒</span>
+                <div class="monster-name">无聊怪</div>
+            </div>
+            <div class="monster" id="monster5" data-task="5">
+                <span class="monster-icon">🧠</span>
+                <div class="monster-name">忘记怪</div>
+            </div>
+            <div class="monster" id="monster6" data-task="6">
+                <span class="monster-icon">🐲</span>
+                <div class="monster-name">海尼曼大王</div>
+            </div>
+        </div>
+        
+        <!-- 龙珠圆形区域 -->
+        <div class="dragon-ball-container">
+            <div class="dragon-ball" id="dragonBall">
+                <!-- 6个扇形部分 -->
+                <div class="dragon-sector" id="dragonSector1">
+                    <div class="dragon-sector-inner"></div>
+                </div>
+                <div class="dragon-sector" id="dragonSector2">
+                    <div class="dragon-sector-inner"></div>
+                </div>
+                <div class="dragon-sector" id="dragonSector3">
+                    <div class="dragon-sector-inner"></div>
+                </div>
+                <div class="dragon-sector" id="dragonSector4">
+                    <div class="dragon-sector-inner"></div>
+                </div>
+                <div class="dragon-sector" id="dragonSector5">
+                    <div class="dragon-sector-inner"></div>
+                </div>
+                <div class="dragon-sector" id="dragonSector6">
+                    <div class="dragon-sector-inner"></div>
+                </div>
+                
+                <!-- 中心区域 -->
+                <div class="dragon-center" id="dragonCenter">
+                    <div class="center-star" id="centerStar">⭐</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 按钮区域 -->
+        <div class="buttons">
+            <button class="action-button points-button" id="pointsButton">
+                <span>💎</span> 龙珠积分
+            </button>
+            <button class="action-button reset-button" id="resetButton">
+                <span>🔄</span> 重置今日
+            </button>
+        </div>
+        
+        <!-- 新的一天按钮 -->
+        <button class="new-day-button" id="newDayButton">
+            <span>🌞</span> 开始新的一天
+        </button>
+        
+        <!-- 调试按钮区域 -->
+        <div class="debug-section">
+            <button class="debug-button" id="testSevenBalls">
+                🧪 测试7颗龙珠弹窗
+            </button>
+            <button class="debug-button" id="clearAllData">
+                🧹 清除所有缓存
+            </button>
+            <button class="debug-button" id="showDebugInfo">
+                ℹ️ 显示调试信息
+            </button>
+        </div>
+        
+        <!-- 使用说明 -->
+        <div class="instructions">
+            <p><strong>使用说明：</strong>点击怪兽开始任务 → 完成任务后再次点击完成！</p>
+            <p>每打败一个怪兽，龙珠就会亮起一块！打败全部6个怪兽，龙珠就会完整！</p>
+            <p><strong>注意：</strong>集齐7颗龙珠后，可以获得10元现金自由支配！</p>
+        </div>
+    </div>
+    
+    <!-- 抽奖系统界面（默认隐藏） -->
+    <div id="choujiangSystem" class="choujiang-container" style="display: none;">
+        <div class="choujiang-header">
+            <h1>🎯 英语学习抽奖系统 🎯</h1>
+            <p>完成单词任务即可抽奖，收集碎片兑大奖！</p>
+        </div>
+        
+        <div class="choujiang-content">
+            <div class="choujiang-stats">
+                <div class="choujiang-stat-item">
+                    <div class="choujiang-stat-value" id="totalFragments">0</div>
+                    <div class="choujiang-stat-label">总抽奖数</div>
+                </div>
+                <div class="choujiang-stat-item">
+                    <div class="choujiang-stat-value" id="totalSpins">0</div>
+                    <div class="choujiang-stat-label">总抽奖数</div>
+                </div>
+                <div class="choujiang-stat-item">
+                    <div class="choujiang-stat-value" id="sessionSpins">0</div>
+                    <div class="choujiang-stat-label">本次抽奖</div>
+                </div>
+            </div>
+            
+            <!-- 修改：去掉10元现金目标 -->
+            <div class="choujiang-guarantee-info">
+                <div class="choujiang-guarantee-item">
+                    <span>电视券保底:</span>
+                    <span id="tvGuarantee">再抽6次必得</span>
+                </div>
+                <div class="choujiang-guarantee-item">
+                    <span>外出券保底:</span>
+                    <span id="outingGuarantee">再抽6次必得</span>
+                </div>
+                <!-- 修改：去掉10元现金保底 -->
+            </div>
+            
+            <button class="choujiang-btn" id="spinBtn" onclick="startChoujiang()">
+                🎯 开始抽奖 🎯
+            </button>
+            
+            <div id="rolling" class="choujiang-rolling">
+                <div id="rollingImage" class="choujiang-reward-image">🎁</div>
+                <div id="rollingName" class="choujiang-reward-name">抽奖中...</div>
+                <div id="rollingDesc" class="choujiang-reward-desc">奖品正在滚动中</div>
+            </div>
+            
+            <div id="result" class="choujiang-result">
+                <div id="rewardImage" class="choujiang-reward-image">🎁</div>
+                <div id="rewardName" class="choujiang-reward-name">奖品名称</div>
+                <div id="rewardDesc" class="choujiang-reward-desc">奖品描述</div>
+                <div class="choujiang-button-group">
+                    <button class="choujiang-btn-primary" onclick="closeChoujiangResult()">继续抽奖</button>
+                </div>
+            </div>
+            
+            <button class="back-to-dragon-btn" onclick="backToDragonSystem()">
+                ← 返回龙珠收集系统
+            </button>
+            
+            <div class="choujiang-reset-section">
+                <button class="choujiang-reset-btn" onclick="choujiangResetData()">
+                    🗑️ 重置抽奖数据
+                </button>
+                <div class="choujiang-reset-note">仅限家长使用</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 抽奖结果模态框 -->
+    <div class="choujiang-modal" id="resultModal">
+        <div class="choujiang-modal-content">
+            <div class="choujiang-result-emoji" id="resultEmoji">🎁</div>
+            <div class="choujiang-result-title" id="resultTitle">恭喜你！</div>
+            <div class="choujiang-result-desc" id="resultDesc">获得了一个奖励！</div>
+            <button class="choujiang-btn-primary" id="closeModal">确定</button>
+        </div>
+    </div>
+    
+    <!-- 龙珠系统模态框 -->
+    <!-- 积分管理模态框 -->
+    <div class="modal-overlay" id="pointsModal">
+        <div class="modal-content">
+            <h2 class="modal-header">龙珠积分系统</h2>
+            
+            <div class="points-label">当前龙珠碎片总数</div>
+            <div class="points-display" id="totalPoints">0</div>
+            <div class="points-label">每完成一个任务 = 1个碎片</div>
+            
+            <div class="deduct-section">
+                <div>使用碎片兑换奖励</div>
+                <input type="number" class="deduct-input" id="deductAmount" min="1" max="100" value="1">
+                <button class="deduct-button" id="deductButton">使用碎片</button>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="close-button" id="closePointsModal">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 确认重置模态框 -->
+    <div class="modal-overlay" id="resetModal">
+        <div class="modal-content">
+            <h2 class="modal-header">确认重置今日战斗</h2>
+            
+            <div style="text-align: center; margin: 20px 0; font-size: 16px; color: #ccc;">
+                您确定要重置今天的战斗进度吗？<br>
+                <span style="color: #ff3838; font-weight: bold;">注意：龙珠积分不会被扣除！</span><br><br>
+                这将让今天的任务重置，但您可以重新开始获取碎片。
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
+                <button class="deduct-button" id="confirmReset">确认重置</button>
+                <button class="close-button" id="cancelReset">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 完成任务提示模态框（添加了抽奖按钮） -->
+    <div class="modal-overlay" id="completionModal">
+        <div class="modal-content">
+            <h2 class="modal-header">🎉 恭喜宝贝！ 🎉</h2>
+            
+            <div style="text-align: center; margin: 20px 0; font-size: 18px; color: #fff;">
+                <div style="font-size: 60px; margin: 20px 0;">🏆</div>
+                <p style="font-size: 24px; color: #ffd700; margin-bottom: 15px; font-weight: bold;">
+                    恭喜你收集齐了6个龙珠碎片！
+                </p>
+                <p style="margin-bottom: 10px;">
+                    你成功打败了所有怪兽，获得了一颗完整的龙珠！
+                </p>
+                <p style="margin-bottom: 10px; font-weight: bold; color: #ff9a00;">
+                    ⭐ 获得一次抽奖机会！ ⭐
+                </p>
+                <p style="margin-bottom: 20px; font-size: 16px;">
+                    收集龙珠就是为了召唤神龙，现在去抽奖实现愿望吧！
+                </p>
+                <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+                    <div style="width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #ffd700, #ff9a00); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">1</div>
+                    <div style="width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #ffd700, #ff9a00); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">颗</div>
+                    <div style="width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #ffd700, #ff9a00); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">龙</div>
+                    <div style="width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #ffd700, #ff9a00); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">珠</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 25px;">
+                <!-- 添加抽奖按钮 -->
+                <button class="deduct-button" id="goToChoujiangButton" style="background: linear-gradient(45deg, #FF416C, #FF4B2B); font-size: 18px; padding: 15px;">
+                    🎯 立即抽奖 🎯
+                </button>
+                <button class="close-button" id="closeCompletionModal">稍后再说</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 7颗龙珠奖励模态框 -->
+    <div class="modal-overlay" id="sevenBallsRewardModal">
+        <div class="modal-content">
+            <h2 class="modal-header">🐉 恭喜集齐7颗龙珠！ 🐉</h2>
+            
+            <div style="text-align: center; margin: 20px 0; font-size: 18px; color: #fff;">
+                <div style="font-size: 80px; margin: 20px 0;">💰</div>
+                <p style="font-size: 28px; color: #ffd700; margin-bottom: 15px; font-weight: bold;">
+                    神龙实现你的愿望！
+                </p>
+                <p style="margin-bottom: 10px; font-size: 22px; color: #2ecc71;">
+                    获得10元现金自由支配！
+                </p>
+                <p style="margin-bottom: 20px; font-size: 16px;">
+                    你可以用这笔钱买任何你想要的东西！<br>
+                    实现你的愿望，就像召唤神龙一样！
+                </p>
+                <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+                    <div style="width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #2ecc71, #27ae60); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">1</div>
+                    <div style="width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #2ecc71, #27ae60); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">0</div>
+                    <div style="width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #2ecc71, #27ae60); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">元</div>
+                    <div style="width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #2ecc71, #27ae60); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">现</div>
+                    <div style="width: 40px; height: 40px; background: radial-gradient(circle at 30% 30%, #2ecc71, #27ae60); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold;">金</div>
+                </div>
+                <p style="margin-top: 20px; font-size: 14px; color: #ffd700;">
+                    🎉 注意：今天不抽奖，直接获得现金奖励！
+                </p>
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
+                <button class="deduct-button" id="closeSevenBallsRewardModal" style="background: linear-gradient(90deg, #2ecc71, #27ae60); font-size: 18px; padding: 15px;">
+                    太棒了！去实现愿望吧！
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 调试信息模态框 -->
+    <div class="modal-overlay" id="debugInfoModal">
+        <div class="modal-content">
+            <h2 class="modal-header">调试信息</h2>
+            
+            <div style="text-align: left; margin: 20px 0; font-size: 14px; color: #ccc;">
+                <p><strong>当前状态：</strong></p>
+                <p>龙珠数量: <span id="debugBallsCount">0</span></p>
+                <p>今日完成: <span id="debugTodayCompleted">0</span>/6</p>
+                <p>龙珠碎片总数: <span id="debugTotalPoints">0</span></p>
+                <p>今日任务完成: <span id="debugTaskCompleted">否</span></p>
+                <p>最后活动日期: <span id="debugLastDate">无</span></p>
+                <p>当前日期: <span id="debugCurrentDate">无</span></p>
+                
+                <hr style="margin: 15px 0; border-color: rgba(255,255,255,0.1);">
+                
+                <p><strong>存储数据：</strong></p>
+                <p>龙珠数据: <span id="debugDragonData">无</span></p>
+                <p>抽奖数据: <span id="debugChoujiangData">无</span></p>
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 25px;">
+                <button class="close-button" id="closeDebugModal">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 龙珠系统JavaScript ==========
+        const tasks = [
+            { 
+                id: 1, 
+                name: "打败瞌睡虫怪",
+                guide: "第一个怪兽是'瞌睡虫怪'，它躲在早上故事的音频里！快去听完故事，把它揪出来打败，获得第一个龙珠碎片！"
+            },
+            { 
+                id: 2, 
+                name: "打败分心怪",
+                guide: "第二个怪兽是'分心怪'，它藏在下午的故事里捣乱！集中注意力听完故事，打败它，拿到第二个碎片！"
+            },
+            { 
+                id: 3, 
+                name: "打败潦草怪",
+                guide: "第三个敌人是'潦草怪'，它会让你的字写得歪歪扭扭！拿起笔认真写字，像悟空练功一样专注，打败它拿到碎片！"
+            },
+            { 
+                id: 4, 
+                name: "打败无聊怪",
+                guide: "第四个怪兽是'无聊怪'，它会让你玩得不开心！快去外面自由活动，用开心的笑声打败它，获得第四个碎片！"
+            },
+            { 
+                id: 5, 
+                name: "打败忘记怪",
+                guide: "第五个敌人是'忘记怪'，它想让你记不住单词！打开Anki卡片，用你的智慧打败它，拿到第五个碎片！"
+            },
+            { 
+                id: 6, 
+                name: "打败海尼曼大王",
+                guide: "最后的BOSS是'海尼曼大王'！它守着10本绘本城堡。快和爸爸/妈妈一起点读，一鼓作气打败它，拿到今天的最后一块碎片！"
+            }
+        ];
+
+        const encouragements = [
+            "厉害！这颗龙珠碎片特别闪亮！",
+            "干得漂亮！你又打败了一个怪兽！",
+            "战斗力提升！你又变强了！",
+            "做得好！神龙在为你加油！",
+            "哇！你的战斗技巧越来越熟练了！",
+            "漂亮的一击！怪兽完全不是你的对手！",
+            "收集碎片的小天才就是你了！",
+            "太棒了！布尔玛的龙珠雷达检测到你的胜利！",
+            "完美！龟仙人都会为你骄傲！",
+            "又打败一个！你已经是个真正的战士了！",
+            "碎片到手！继续前进！",
+            "胜利！这颗碎片归你了！",
+            "打怪成功！龙珠碎片+1！",
+            "怪兽被打败了！你真是个小英雄！",
+            "好样的！你的努力让神龙更近了！",
+            "太厉害了！这个怪兽被你轻松击败！",
+            "恭喜！你的战斗力又提升了！",
+            "打怪升级！你离召唤神龙更近一步！",
+            "漂亮！怪兽看到你都害怕了！",
+            "成功了！你收集碎片的速度真快！"
+        ];
+
+        const completionCelebrations = [
+            "🎉 大胜利！今天的6个怪兽全部被你打败了！龙珠完整！ 🎉",
+            "🎊 恭喜！你成功击败了所有怪兽，龙珠已经完整发光！ 🎊",
+            "🌟 太棒了！今天的战斗全部胜利，龙珠已经完整！ 🌟",
+            "🏆 冠军！今天的打怪任务全部完成！龙珠完整！ 🏆",
+            "✨ 完美！你让所有怪兽都逃跑了！龙珠完整发光！ ✨",
+            "🎯 目标达成！你是今天的打怪小能手！龙珠完整！ 🎯"
+        ];
+
+        // 全局状态
+        const taskStates = [0, 0, 0, 0, 0, 0];
+        let completedCount = 0;
+        let totalPoints = 0;
+        let collectedBalls = 0;
+        let isInitialized = false;
+        let todayCompleted = false;
+        let lastActivityDate = null;
+
+        // 初始化
+        function loadData() {
+            console.log("正在加载数据...");
+            
+            // 加载总积分
+            const savedPoints = localStorage.getItem('dragonBallPoints');
+            if (savedPoints) {
+                totalPoints = parseInt(savedPoints) || 0;
+                console.log("加载积分:", totalPoints);
+            }
+            
+            // 加载已收集的龙珠数量
+            const savedBalls = localStorage.getItem('dragonBallsCollected');
+            if (savedBalls) {
+                collectedBalls = parseInt(savedBalls) || 0;
+                console.log("加载龙珠:", collectedBalls);
+                
+                // 如果龙珠数量超过7，修正为7
+                if (collectedBalls > 7) {
+                    collectedBalls = 7;
+                    saveCollectedBalls();
+                }
+            }
+            
+            // 加载最后活动日期
+            const savedLastDate = localStorage.getItem('dragonBallLastDate');
+            if (savedLastDate) {
+                lastActivityDate = savedLastDate;
+                console.log("最后活动日期:", lastActivityDate);
+            }
+            
+            // 加载当天的战斗状态
+            const saved = localStorage.getItem('dragonBallTasks');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    const today = new Date().toDateString();
+                    
+                    // 更新最后活动日期
+                    if (lastActivityDate !== today) {
+                        console.log("检测到新的一天，需要手动重置");
+                        // 显示提示，但不清除任务状态
+                        document.getElementById('statusText').textContent = "今天是新的一天！请点击'开始新的一天'按钮重置任务";
+                        document.getElementById('statusText').style.color = "#ffd700";
+                        
+                        // 显示新的一天按钮
+                        document.getElementById('newDayButton').style.display = 'block';
+                    } else {
+                        // 如果是同一天，加载进度
+                        completedCount = data.completedCount || 0;
+                        todayCompleted = data.todayCompleted || false;
+                        console.log("加载完成数:", completedCount, "今天已完成:", todayCompleted);
+                        
+                        // 恢复每个任务的状态
+                        for (let i = 0; i < 6; i++) {
+                            taskStates[i] = data.taskStates && data.taskStates[i] || 0;
+                            
+                            const monster = document.getElementById(`monster${i+1}`);
+                            const dragonSector = document.getElementById(`dragonSector${i+1}`);
+                            
+                            if (taskStates[i] === 1) {
+                                monster.classList.add('ready');
+                            } else if (taskStates[i] === 2) {
+                                monster.classList.remove('ready');
+                                monster.classList.add('complete');
+                                dragonSector.classList.add('complete');
+                            }
+                        }
+                        
+                        updateProgress();
+                        
+                        if (completedCount === 6 && !todayCompleted) {
+                            console.log("检测到全部完成，触发完成效果");
+                            completeAllTasks();
+                        } else if (todayCompleted) {
+                            showCompletedState();
+                        }
+                    }
+                } catch (e) {
+                    console.error("解析存储数据出错:", e);
+                    resetTodayTasks();
+                }
+            } else {
+                console.log("没有存储的数据，初始化新数据");
+                // 设置今天为最后活动日期
+                lastActivityDate = new Date().toDateString();
+                localStorage.setItem('dragonBallLastDate', lastActivityDate);
+            }
+            
+            updatePointsDisplay();
+            updateBallsDisplay();
+            console.log("数据加载完成");
+            
+            // 检查是否已经有7颗龙珠
+            if (collectedBalls >= 7) {
+                console.log("检测到已有7颗龙珠，直接触发奖励");
+                setTimeout(() => {
+                    checkSevenBalls();
+                }, 1000);
+            }
+        }
+
+        function saveData() {
+            const today = new Date().toDateString();
+            const data = {
+                date: today,
+                completedCount: completedCount,
+                taskStates: taskStates,
+                todayCompleted: todayCompleted
+            };
+            localStorage.setItem('dragonBallTasks', JSON.stringify(data));
+            console.log("数据已保存:", data);
+        }
+
+        function savePoints() {
+            localStorage.setItem('dragonBallPoints', totalPoints.toString());
+            console.log("积分已保存:", totalPoints);
+        }
+
+        function saveCollectedBalls() {
+            localStorage.setItem('dragonBallsCollected', collectedBalls.toString());
+            console.log("龙珠数量已保存:", collectedBalls);
+        }
+
+        // 检查是否集齐7颗龙珠
+        function checkSevenBalls() {
+            if (collectedBalls >= 7) {
+                console.log("集齐7颗龙珠！触发奖励");
+                
+                // 弹出7颗龙珠奖励模态框
+                openSevenBallsRewardModal();
+                
+                // 重置龙珠数量为0（因为已经兑换了10元现金）
+                collectedBalls = 0;
+                saveCollectedBalls();
+                updateBallsDisplay();
+                
+                // 播放庆祝音效
+                playSevenBallsSound();
+                
+                return true;
+            }
+            return false;
+        }
+
+        function updateBallsDisplay() {
+            for (let i = 1; i <= 7; i++) {
+                const ball = document.getElementById(`ball${i}`);
+                if (i <= collectedBalls) {
+                    ball.classList.add('collected');
+                } else {
+                    ball.classList.remove('collected');
+                }
+            }
+            console.log("更新龙珠显示:", collectedBalls);
+        }
+
+        function speak(text, rate = 1.0) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = rate;
+                utterance.pitch = 1.2;
+                utterance.volume = 1;
+                
+                window.speechSynthesis.speak(utterance);
+                console.log("播放语音:", text);
+            }
+        }
+
+        function playSound(frequency = 800, duration = 0.3, type = 'sine') {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log("音效播放失败");
+            }
+        }
+
+        function playEncouragementSound() {
+            playSound(523.25, 0.2);
+            setTimeout(() => playSound(659.25, 0.2), 100);
+            setTimeout(() => playSound(783.99, 0.3), 200);
+        }
+
+        function playCompletionSound() {
+            playSound(659.25, 0.3);
+            setTimeout(() => playSound(783.99, 0.3), 150);
+            setTimeout(() => playSound(1046.50, 0.4), 300);
+            setTimeout(() => playSound(1318.51, 0.5), 450);
+        }
+
+        function playSevenBallsSound() {
+            playSound(523.25, 0.3); // C5
+            setTimeout(() => playSound(659.25, 0.3), 100); // E5
+            setTimeout(() => playSound(783.99, 0.3), 200); // G5
+            setTimeout(() => playSound(1046.50, 0.4), 300); // C6
+            setTimeout(() => playSound(1318.51, 0.4), 400); // E6
+            setTimeout(() => playSound(1567.98, 0.5), 500); // G6
+            setTimeout(() => playSound(2093.00, 0.6), 600); // C7
+        }
+
+        function getRandomEncouragement() {
+            return encouragements[Math.floor(Math.random() * encouragements.length)];
+        }
+
+        function getRandomCelebration() {
+            return completionCelebrations[Math.floor(Math.random() * completionCelebrations.length)];
+        }
+
+        function updateProgress() {
+            const progressPercent = (completedCount / 6) * 100;
+            document.getElementById('progressFill').style.width = `${progressPercent}%`;
+            document.getElementById('progressCount').textContent = completedCount;
+            
+            console.log("更新进度:", completedCount, "/6");
+            
+            if (completedCount === 6 && !todayCompleted) {
+                console.log("检测到全部完成，触发完成效果");
+                completeAllTasks();
+            }
+        }
+
+        function showCompletedState() {
+            const dragonBall = document.getElementById('dragonBall');
+            const dragonCenter = document.getElementById('dragonCenter');
+            const centerStar = document.getElementById('centerStar');
+            
+            dragonBall.classList.add('complete');
+            dragonCenter.classList.add('complete');
+            centerStar.classList.add('show');
+            
+            document.getElementById('statusText').textContent = "今天你已经完成了所有任务！太棒了！";
+        }
+
+        function completeAllTasks() {
+            console.log("执行完成效果");
+            
+            todayCompleted = true;
+            saveData();
+            
+            const celebration = getRandomCelebration();
+            document.getElementById('statusText').textContent = celebration;
+            document.getElementById('statusText').classList.add('celebrate');
+            
+            const dragonBall = document.getElementById('dragonBall');
+            const dragonCenter = document.getElementById('dragonCenter');
+            const centerStar = document.getElementById('centerStar');
+            
+            dragonBall.classList.add('complete');
+            dragonCenter.classList.add('complete');
+            
+            setTimeout(() => {
+                centerStar.classList.add('show');
+            }, 500);
+            
+            playCompletionSound();
+            
+            setTimeout(() => {
+                // 检查是否集齐7颗龙珠
+                const oldBalls = collectedBalls;
+                collectedBalls = Math.min(collectedBalls + 1, 7);
+                
+                if (collectedBalls > oldBalls) {
+                    saveCollectedBalls();
+                    updateBallsDisplay();
+                    console.log("增加一颗龙珠:", collectedBalls);
+                    
+                    // 检查是否集齐7颗龙珠
+                    if (collectedBalls === 7) {
+                        // 集齐7颗龙珠，直接显示奖励，不显示抽奖
+                        speak("太棒了！你集齐了7颗龙珠！神龙实现了你的愿望，奖励10元现金自由支配！", 0.8);
+                        
+                        setTimeout(() => {
+                            checkSevenBalls();
+                        }, 1000);
+                        return; // 不显示抽奖模态框
+                    }
+                }
+                
+                // 如果没有集齐7颗龙珠，显示抽奖提示
+                speak("太棒了！6个龙珠碎片已经合成一颗完整的龙珠！恭喜你获得了一次抽奖机会！", 0.8);
+                
+                setTimeout(() => {
+                    openCompletionModal();
+                }, 1500);
+            }, 1000);
+        }
+
+        function handleMonsterClick(event) {
+            if (todayCompleted) {
+                speak("今天你已经完成了所有任务，真棒！明天再来继续战斗吧！", 0.9);
+                document.getElementById('statusText').textContent = "今天你已经完成了所有任务，明天再来继续战斗吧！";
+                return;
+            }
+            
+            const monster = event.currentTarget;
+            const monsterId = parseInt(monster.getAttribute('data-task'));
+            const taskIndex = monsterId - 1;
+            const statusText = document.getElementById('statusText');
+            const dragonSector = document.getElementById(`dragonSector${monsterId}`);
+            
+            console.log("点击怪兽:", monsterId, "状态:", taskStates[taskIndex]);
+            
+            if (taskStates[taskIndex] === 2) return;
+            
+            if (taskStates[taskIndex] === 0) {
+                console.log("第一次点击: 接任务");
+                const guide = tasks[taskIndex].guide;
+                speak(guide, 0.9);
+                
+                statusText.textContent = `战斗任务：${tasks[taskIndex].name}`;
+                monster.classList.add('ready');
+                taskStates[taskIndex] = 1;
+                playSound(523.25, 0.2);
+                saveData();
+            } else if (taskStates[taskIndex] === 1) {
+                console.log("第二次点击: 完成任务");
+                monster.classList.remove('ready');
+                monster.classList.add('complete');
+                dragonSector.classList.add('complete');
+                
+                taskStates[taskIndex] = 2;
+                completedCount++;
+                
+                totalPoints++;
+                savePoints();
+                updatePointsDisplay();
+                
+                const encouragement = getRandomEncouragement();
+                speak(encouragement, 1.0);
+                
+                statusText.textContent = encouragement;
+                statusText.classList.add('celebrate');
+                setTimeout(() => {
+                    statusText.classList.remove('celebrate');
+                }, 1000);
+                
+                playEncouragementSound();
+                updateProgress();
+                saveData();
+            }
+        }
+
+        function resetTodayTasks() {
+            console.log("重置今日任务");
+            for (let i = 0; i < 6; i++) {
+                taskStates[i] = 0;
+                const monster = document.getElementById(`monster${i+1}`);
+                const dragonSector = document.getElementById(`dragonSector${i+1}`);
+                
+                monster.classList.remove('ready', 'complete');
+                dragonSector.classList.remove('complete');
+            }
+            
+            const dragonBall = document.getElementById('dragonBall');
+            const dragonCenter = document.getElementById('dragonCenter');
+            const centerStar = document.getElementById('centerStar');
+            
+            dragonBall.classList.remove('complete');
+            dragonCenter.classList.remove('complete');
+            centerStar.classList.remove('show');
+            
+            completedCount = 0;
+            todayCompleted = false;
+            updateProgress();
+            
+            document.getElementById('statusText').textContent = "今日战斗已重置，可以重新开始！";
+            document.getElementById('statusText').style.color = "white";
+            speak("今天的战斗记录已清空，可以重新开始收集碎片了！", 0.9);
+            saveData();
+        }
+
+        // 开始新的一天 - 修正逻辑
+        function startNewDay() {
+            const today = new Date().toDateString();
+            
+            console.log("开始新的一天，当前龙珠数量:", collectedBalls);
+            
+            // 如果龙珠数量>=7，先触发奖励
+            if (collectedBalls >= 7) {
+                console.log("龙珠已满7颗，先触发奖励");
+                checkSevenBalls();
+                
+                // 注意：checkSevenBalls函数会重置龙珠为0并保存
+                // 我们需要等待奖励弹窗关闭后再继续
+                setTimeout(() => {
+                    continueNewDay(today);
+                }, 500);
+            } else {
+                // 龙珠不满7颗，直接继续
+                continueNewDay(today);
+            }
+        }
+        
+        function continueNewDay(today) {
+            // 更新最后活动日期
+            lastActivityDate = today;
+            localStorage.setItem('dragonBallLastDate', today);
+            
+            // 重置今日任务
+            resetTodayTasks();
+            
+            // 隐藏新的一天按钮
+            document.getElementById('newDayButton').style.display = 'none';
+            
+            speak("新的一天开始了！加油收集龙珠碎片吧！", 0.9);
+        }
+
+        function deductPoints() {
+            const deductAmount = parseInt(document.getElementById('deductAmount').value);
+            
+            if (isNaN(deductAmount) || deductAmount < 1) {
+                alert("请输入有效的碎片数量！");
+                return;
+            }
+            
+            if (deductAmount > totalPoints) {
+                alert("龙珠碎片不足！当前碎片数：" + totalPoints);
+                return;
+            }
+            
+            if (confirm(`确定要使用 ${deductAmount} 个龙珠碎片兑换奖励吗？`)) {
+                totalPoints -= deductAmount;
+                savePoints();
+                updatePointsDisplay();
+                
+                speak(`成功使用 ${deductAmount} 个碎片，剩余龙珠碎片 ${totalPoints}个`, 0.9);
+                closePointsModal();
+            }
+        }
+
+        function openPointsModal() {
+            document.getElementById('pointsModal').style.display = 'flex';
+        }
+
+        function closePointsModal() {
+            document.getElementById('pointsModal').style.display = 'none';
+        }
+
+        function openResetModal() {
+            document.getElementById('resetModal').style.display = 'flex';
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').style.display = 'none';
+        }
+
+        function openCompletionModal() {
+            document.getElementById('completionModal').style.display = 'flex';
+        }
+
+        function closeCompletionModal() {
+            document.getElementById('completionModal').style.display = 'none';
+        }
+
+        function openSevenBallsRewardModal() {
+            document.getElementById('sevenBallsRewardModal').style.display = 'flex';
+            speak("恭喜你集齐7颗龙珠！神龙实现了你的愿望，奖励10元现金自由支配！", 0.9);
+        }
+
+        function closeSevenBallsRewardModal() {
+            document.getElementById('sevenBallsRewardModal').style.display = 'none';
+        }
+        
+        // 显示调试信息
+        function showDebugInfo() {
+            const today = new Date().toDateString();
+            
+            document.getElementById('debugBallsCount').textContent = collectedBalls;
+            document.getElementById('debugTodayCompleted').textContent = completedCount;
+            document.getElementById('debugTotalPoints').textContent = totalPoints;
+            document.getElementById('debugTaskCompleted').textContent = todayCompleted ? "是" : "否";
+            document.getElementById('debugLastDate').textContent = lastActivityDate || "无";
+            document.getElementById('debugCurrentDate').textContent = today;
+            
+            // 获取存储数据
+            const dragonData = localStorage.getItem('dragonBallTasks');
+            const choujiangData = localStorage.getItem('englishRewardData');
+            
+            document.getElementById('debugDragonData').textContent = dragonData ? "已存储" : "无";
+            document.getElementById('debugChoujiangData').textContent = choujiangData ? "已存储" : "无";
+            
+            document.getElementById('debugInfoModal').style.display = 'flex';
+        }
+        
+        function closeDebugModal() {
+            document.getElementById('debugInfoModal').style.display = 'none';
+        }
+        
+        // 测试7颗龙珠弹窗
+        function testSevenBalls() {
+            // 临时设置龙珠数量为7
+            collectedBalls = 7;
+            updateBallsDisplay();
+            
+            // 触发7颗龙珠奖励
+            checkSevenBalls();
+            
+            speak("测试7颗龙珠弹窗功能", 0.9);
+        }
+        
+        // 清除所有缓存
+        function clearAllData() {
+            if (confirm("确定要清除所有缓存数据吗？这将重置所有进度！")) {
+                // 清除所有本地存储
+                localStorage.removeItem('dragonBallTasks');
+                localStorage.removeItem('dragonBallPoints');
+                localStorage.removeItem('dragonBallsCollected');
+                localStorage.removeItem('dragonBallLastDate');
+                localStorage.removeItem('englishRewardData');
+                
+                // 重置所有状态
+                for (let i = 0; i < 6; i++) {
+                    taskStates[i] = 0;
+                    const monster = document.getElementById(`monster${i+1}`);
+                    const dragonSector = document.getElementById(`dragonSector${i+1}`);
+                    
+                    monster.classList.remove('ready', 'complete');
+                    dragonSector.classList.remove('complete');
+                }
+                
+                const dragonBall = document.getElementById('dragonBall');
+                const dragonCenter = document.getElementById('dragonCenter');
+                const centerStar = document.getElementById('centerStar');
+                
+                dragonBall.classList.remove('complete');
+                dragonCenter.classList.remove('complete');
+                centerStar.classList.remove('show');
+                
+                completedCount = 0;
+                totalPoints = 0;
+                collectedBalls = 0;
+                todayCompleted = false;
+                
+                // 设置今天为最后活动日期
+                lastActivityDate = new Date().toDateString();
+                localStorage.setItem('dragonBallLastDate', lastActivityDate);
+                
+                updateProgress();
+                updatePointsDisplay();
+                updateBallsDisplay();
+                
+                document.getElementById('statusText').textContent = "所有数据已清除，可以重新开始！";
+                document.getElementById('statusText').style.color = "white";
+                document.getElementById('newDayButton').style.display = 'none';
+                
+                speak("所有数据已清除，可以重新开始游戏！", 0.9);
+            }
+        }
+
+        // 新增：打开抽奖系统
+        function openChoujiangSystem() {
+            document.getElementById('dragonSystem').style.display = 'none';
+            document.getElementById('choujiangSystem').style.display = 'block';
+            closeCompletionModal();
+            speak("欢迎来到抽奖系统！点击开始抽奖按钮，看看能抽到什么奖励吧！", 0.9);
+        }
+
+        // 新增：返回龙珠系统
+        function backToDragonSystem() {
+            document.getElementById('choujiangSystem').style.display = 'none';
+            document.getElementById('dragonSystem').style.display = 'block';
+            speak("回到龙珠收集系统，继续收集龙珠碎片吧！", 0.9);
+        }
+
+        function handleSevenBallsClick() {
+            speak("集齐7颗龙珠就能召唤神龙实现愿望！奖励10元现金自由支配！加油，龙珠战士！", 0.9);
+            document.getElementById('statusText').textContent = "集齐7颗龙珠就能召唤神龙实现愿望！奖励10元现金！";
+            document.getElementById('statusText').classList.add('celebrate');
+            setTimeout(() => {
+                document.getElementById('statusText').classList.remove('celebrate');
+            }, 1000);
+        }
+
+        function initMonsterEvents() {
+            console.log("初始化怪兽点击事件");
+            for (let i = 1; i <= 6; i++) {
+                const monster = document.getElementById(`monster${i}`);
+                monster.removeEventListener('click', handleMonsterClick);
+                monster.addEventListener('click', handleMonsterClick);
+                console.log(`怪兽${i}事件已绑定`);
+            }
+        }
+
+        function updatePointsDisplay() {
+            document.getElementById('totalPoints').textContent = totalPoints;
+        }
+
+        // ========== 抽奖系统JavaScript ==========
+        let choujiangData = {
+            totalSpins: 0,
+            sessionSpins: 0,
+            tvCounter: 0,
+            outingCounter: 0
+        };
+        
+        // 修改：去掉10元现金和10元碎片
+        const choujiangRewards = [
+            { 
+                name: "🍭健康零食", 
+                desc: "选一个喜欢的小零食！", 
+                emoji: "🍭", 
+                prob: 30,
+                type: "daily"
+            },
+            { 
+                name: "🥛健康牛奶", 
+                desc: "补充营养，健康成长！", 
+                emoji: "🥛", 
+                prob: 30,
+                type: "daily"
+            },
+            { 
+                name: "🌳楼下玩券", 
+                desc: "凭券可延长玩耍时间至8:45，3天内使用", 
+                emoji: "🌳", 
+                prob: 30,
+                type: "daily"
+            },
+            { 
+                name: "📺电视券", 
+                desc: "凭券可观看电视20分钟，3天内使用", 
+                emoji: "📺", 
+                prob: 5,
+                type: "premium",
+                guarantee: 7
+            },
+            { 
+                name: "🎪外出券", 
+                desc: "凭券可去大汉或恒大玩耍，3天内使用", 
+                emoji: "🎪", 
+                prob: 5,
+                type: "premium",
+                guarantee: 7
+            }
+        ];
+
+        function choujiangLoadData() {
+            const savedData = localStorage.getItem('englishRewardData');
+            if (savedData) {
+                const parsedData = JSON.parse(savedData);
+                choujiangData = {...choujiangData, ...parsedData};
+            }
+            choujiangUpdateUI();
+        }
+        
+        function choujiangSaveData() {
+            localStorage.setItem('englishRewardData', JSON.stringify(choujiangData));
+        }
+        
+        function choujiangUpdateUI() {
+            // 修改：显示总抽奖数
+            document.getElementById('totalFragments').textContent = choujiangData.totalSpins;
+            document.getElementById('totalSpins').textContent = choujiangData.totalSpins;
+            document.getElementById('sessionSpins').textContent = choujiangData.sessionSpins;
+            
+            document.getElementById('tvGuarantee').textContent = `再抽${7 - choujiangData.tvCounter}次必得`;
+            document.getElementById('outingGuarantee').textContent = `再抽${7 - choujiangData.outingCounter}次必得`;
+        }
+        
+        function startChoujiang() {
+            const button = document.getElementById('spinBtn');
+            const result = document.getElementById('result');
+            const rolling = document.getElementById('rolling');
+            
+            button.disabled = true;
+            button.innerHTML = '🎰 抽奖中... 🎰';
+            
+            rolling.style.display = 'flex';
+            result.style.display = 'none';
+            
+            let rollCount = 0;
+            const maxRolls = 20;
+            const rollInterval = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * choujiangRewards.length);
+                const tempReward = choujiangRewards[randomIndex];
+                
+                document.getElementById('rollingImage').textContent = tempReward.emoji;
+                document.getElementById('rollingName').textContent = tempReward.name;
+                document.getElementById('rollingDesc').textContent = tempReward.desc;
+                
+                rollCount++;
+                
+                if (rollCount >= maxRolls) {
+                    clearInterval(rollInterval);
+                    
+                    const finalReward = choujiangGetRandomReward();
+                    
+                    setTimeout(() => {
+                        choujiangProcessReward(finalReward);
+                        rolling.style.display = 'none';
+                        
+                        createFireworks();
+                        
+                        button.disabled = false;
+                        button.innerHTML = '🎯 开始抽奖 🎯';
+                    }, 500);
+                }
+            }, 100);
+        }
+        
+        function choujiangGetRandomReward() {
+            // 修改：只保留电视券和外出券的保底
+            if (choujiangData.outingCounter >= 7) {
+                choujiangData.outingCounter = 0;
+                return choujiangRewards.find(r => r.name === "🎪外出券");
+            }
+            
+            if (choujiangData.tvCounter >= 7) {
+                choujiangData.tvCounter = 0;
+                return choujiangRewards.find(r => r.name === "📺电视券");
+            }
+            
+            const random = Math.random() * 100;
+            let cumulativeProb = 0;
+            
+            for (const reward of choujiangRewards) {
+                cumulativeProb += reward.prob;
+                if (random <= cumulativeProb) {
+                    return reward;
+                }
+            }
+            return choujiangRewards[0];
+        }
+        
+        function choujiangProcessReward(reward) {
+            choujiangData.totalSpins++;
+            choujiangData.sessionSpins++;
+            
+            choujiangData.tvCounter++;
+            choujiangData.outingCounter++;
+            
+            if (reward.name === "📺电视券") {
+                choujiangData.tvCounter = 0;
+            } else if (reward.name === "🎪外出券") {
+                choujiangData.outingCounter = 0;
+            }
+            
+            choujiangShowResult(reward);
+            choujiangSaveData();
+            choujiangUpdateUI();
+        }
+        
+        function choujiangShowResult(reward) {
+            const result = document.getElementById('result');
+            const rewardImage = document.getElementById('rewardImage');
+            const rewardName = document.getElementById('rewardName');
+            const rewardDesc = document.getElementById('rewardDesc');
+            
+            rewardImage.textContent = reward.emoji;
+            rewardName.textContent = reward.name;
+            rewardDesc.textContent = reward.desc;
+            
+            result.style.display = 'block';
+            
+            choujiangSpeakText(`恭喜获得${reward.name}！${reward.desc}`);
+        }
+        
+        function closeChoujiangResult() {
+            document.getElementById('result').style.display = 'none';
+        }
+        
+        function choujiangResetData() {
+            if (confirm("确定要重置抽奖数据吗？这将清空所有抽奖记录和保底计数器！")) {
+                choujiangData = {
+                    totalSpins: 0,
+                    sessionSpins: 0,
+                    tvCounter: 0,
+                    outingCounter: 0
+                };
+                
+                localStorage.removeItem('englishRewardData');
+                choujiangUpdateUI();
+                choujiangShowModal("重置成功", "抽奖数据已清空，可以重新开始了！", "🔄");
+                console.log("抽奖数据已重置");
+            }
+        }
+        
+        function choujiangShowModal(title, desc, emoji) {
+            const modal = document.getElementById('resultModal');
+            const resultEmoji = document.getElementById('resultEmoji');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultDesc = document.getElementById('resultDesc');
+            
+            resultEmoji.textContent = emoji;
+            resultTitle.textContent = title;
+            resultDesc.textContent = desc;
+            
+            modal.style.display = 'flex';
+        }
+        
+        function choujiangSpeakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.2;
+                utterance.volume = 0.8;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        
+        function createFireworks() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.className = 'choujiang-firework';
+                    firework.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    firework.style.setProperty('--x', `${Math.random() * 100 - 50}vw`);
+                    firework.style.setProperty('--y', `${Math.random() * 100 - 50}vh`);
+                    firework.style.animation = `choujiang-firework 0.8s ease-out forwards`;
+                    document.body.appendChild(firework);
+                    
+                    setTimeout(() => {
+                        firework.remove();
+                    }, 800);
+                }, i * 100);
+            }
+        }
+
+        // ========== 初始化函数 ==========
+        function init() {
+            if (isInitialized) {
+                console.log("页面已初始化，跳过");
+                return;
+            }
+            
+            console.log("开始初始化页面");
+            
+            // 加载龙珠系统数据
+            loadData();
+            
+            // 初始化抽奖系统数据
+            choujiangLoadData();
+            
+            // 初始化怪兽点击事件
+            initMonsterEvents();
+            
+            // 7颗龙珠区域点击事件
+            document.getElementById('sevenBalls').addEventListener('click', handleSevenBallsClick);
+            
+            // 龙珠系统按钮事件
+            document.getElementById('pointsButton').addEventListener('click', openPointsModal);
+            document.getElementById('resetButton').addEventListener('click', openResetModal);
+            document.getElementById('newDayButton').addEventListener('click', startNewDay);
+            document.getElementById('closePointsModal').addEventListener('click', closePointsModal);
+            document.getElementById('deductButton').addEventListener('click', deductPoints);
+            document.getElementById('confirmReset').addEventListener('click', () => {
+                resetTodayTasks();
+                closeResetModal();
+            });
+            document.getElementById('cancelReset').addEventListener('click', closeResetModal);
+            document.getElementById('closeCompletionModal').addEventListener('click', closeCompletionModal);
+            
+            // 7颗龙珠奖励模态框关闭按钮
+            document.getElementById('closeSevenBallsRewardModal').addEventListener('click', closeSevenBallsRewardModal);
+            
+            // 调试按钮事件
+            document.getElementById('testSevenBalls').addEventListener('click', testSevenBalls);
+            document.getElementById('clearAllData').addEventListener('click', clearAllData);
+            document.getElementById('showDebugInfo').addEventListener('click', showDebugInfo);
+            document.getElementById('closeDebugModal').addEventListener('click', closeDebugModal);
+            
+            // 新增：抽奖按钮事件
+            document.getElementById('goToChoujiangButton').addEventListener('click', openChoujiangSystem);
+            
+            // 抽奖系统按钮事件
+            document.getElementById('closeModal').addEventListener('click', function() {
+                document.getElementById('resultModal').style.display = 'none';
+            });
+            
+            // 点击模态框外部关闭
+            document.getElementById('pointsModal').addEventListener('click', (e) => {
+                if (e.target.id === 'pointsModal') closePointsModal();
+            });
+            
+            document.getElementById('resetModal').addEventListener('click', (e) => {
+                if (e.target.id === 'resetModal') closeResetModal();
+            });
+            
+            document.getElementById('completionModal').addEventListener('click', (e) => {
+                if (e.target.id === 'completionModal') closeCompletionModal();
+            });
+            
+            document.getElementById('sevenBallsRewardModal').addEventListener('click', (e) => {
+                if (e.target.id === 'sevenBallsRewardModal') closeSevenBallsRewardModal();
+            });
+            
+            document.getElementById('debugInfoModal').addEventListener('click', (e) => {
+                if (e.target.id === 'debugInfoModal') closeDebugModal();
+            });
+            
+            // 初始欢迎语
+            setTimeout(() => {
+                speak("龙珠战士，欢迎来到碎片收集站！点击任意怪兽开始战斗，打败怪兽点亮龙珠吧！", 0.9);
+            }, 800);
+            
+            document.getElementById('statusText').textContent = "点击怪兽开始收集龙珠碎片！";
+            
+            isInitialized = true;
+            console.log("页面初始化完成");
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', init);
+        
+        // 添加触摸事件支持
+        document.addEventListener('touchstart', function() {}, {passive: true});
+    </script>
+</body>
+</html>
